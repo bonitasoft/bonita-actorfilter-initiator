@@ -4,7 +4,7 @@
 
     <groupId>org.bonitasoft.actorfilter</groupId>
     <artifactId>bonita-actorfilter-initiator</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>bonita-actorfilter-initiator</name>
     <packaging>jar</packaging>
 
