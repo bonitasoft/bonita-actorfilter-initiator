@@ -4,7 +4,7 @@
 [![Maven Central](https://img.shields.io/maven-central/v/org.bonitasoft.connectors/bonita-actorfilter-initiator.svg?label=Maven%20Central&color=orange)](https://search.maven.org/search?q=g:%22org.bonitasoft.actorfilter%22%20AND%20a:%22bonita-actorfilter-initiator%22)
 [![License: GPL v2](https://img.shields.io/badge/License-GPL%20v2-yellow.svg)](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html)
 
-Filter users of an actor based on the process initiator
+Filter users of an actor based on the process initiator.
 
 ## Build
 
