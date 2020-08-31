@@ -51,6 +51,7 @@
         <assertj-core.version>3.16.1</assertj-core.version>
         <mockito-core.version>3.3.3</mockito-core.version>
         <logback-classic.version>1.2.3</logback-classic.version>
+        <testcontainers.version>1.14.3</testcontainers.version>
 
         <!-- Maven plugins -->
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
@@ -110,6 +111,19 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback-classic.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>${testcontainers.version}</version>
             <scope>test</scope>
         </dependency>
 
