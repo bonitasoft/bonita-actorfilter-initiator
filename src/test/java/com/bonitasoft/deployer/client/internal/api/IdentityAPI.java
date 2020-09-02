@@ -8,6 +8,7 @@
  */
 package com.bonitasoft.deployer.client.internal.api;
 
+import com.bonitasoft.deployer.client.internal.services.model.CreateUser;
 import com.bonitasoft.deployer.client.model.User;
 import retrofit2.Call;
 import retrofit2.http.Body;

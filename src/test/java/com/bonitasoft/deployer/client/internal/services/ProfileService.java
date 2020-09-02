@@ -8,27 +8,16 @@
  */
 package com.bonitasoft.deployer.client.internal.services;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
-
 import com.bonitasoft.deployer.client.event.ImportNotifier;
 import com.bonitasoft.deployer.client.event.ImportWarningEvent;
+import com.bonitasoft.deployer.client.exception.ClientException;
 import com.bonitasoft.deployer.client.exception.UnauthorizedException;
 import com.bonitasoft.deployer.client.internal.BonitaCookieInterceptor;
 import com.bonitasoft.deployer.client.internal.api.ProfileAPI;
+import com.bonitasoft.deployer.client.internal.services.model.CreateProfileMembership;
 import com.bonitasoft.deployer.client.model.Profile;
+import com.bonitasoft.deployer.client.model.ProfileMembership;
+import com.bonitasoft.deployer.client.model.User;
 import com.bonitasoft.deployer.client.policies.ProfileImportPolicy;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
@@ -41,17 +30,29 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import retrofit2.Response;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 public class ProfileService extends ClientService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileService.class);
     private final BonitaCookieInterceptor bonitaCookieInterceptor;
     private final ProfileAPI profileAPI;
+    private final IdentityService identityService;
     private ImportNotifier importNotifier;
 
-    public ProfileService(BonitaCookieInterceptor bonitaCookieInterceptor, ProfileAPI profileAPI,
-            ImportNotifier importNotifier) {
+    public ProfileService(BonitaCookieInterceptor bonitaCookieInterceptor, ProfileAPI profileAPI, IdentityService identityService,
+                          ImportNotifier importNotifier) {
         this.bonitaCookieInterceptor = bonitaCookieInterceptor;
         this.profileAPI = profileAPI;
+        this.identityService = identityService;
         this.importNotifier = importNotifier;
     }
 
@@ -62,7 +63,7 @@ public class ProfileService extends ClientService {
         Response<List<Profile>> response = profileAPI.search(0, 1, "name=" + name).execute();
         checkResponse(response);
         List<Profile> body = response.body();
-        if (body.isEmpty()) {
+        if (body == null || body.isEmpty()) {
             LOGGER.debug("Can't find any existing profile with the name '{}'.", name);
             return null;
         }
@@ -129,12 +130,39 @@ public class ProfileService extends ClientService {
         return tokens;
     }
 
-    public List<Profile> searchProfiles(int page, int count)
-            throws IOException, UnauthorizedException {
+    public List<Profile> searchProfiles(int page, int count) throws IOException, UnauthorizedException {
         bonitaCookieInterceptor.checkLogged();
         Response<List<Profile>> response = profileAPI.search(page, count).execute();
         checkResponse(response);
         return response.body();
 
+    }
+
+    /**
+     * @param userId
+     * @param profileId
+     * @return return the membership id
+     * @throws IOException
+     * @throws UnauthorizedException
+     */
+    public long addUserToProfile(long userId, long profileId) throws ClientException, IOException {
+        CreateProfileMembership createProfileMembership = new CreateProfileMembership()
+                .setProfileId(profileId)
+                .setMembershipType(CreateProfileMembership.Type.USER)
+                .setUserId(userId);
+        Response<ProfileMembership> response = profileAPI.addProfileMember(createProfileMembership).execute();
+        checkResponse(response);
+        ProfileMembership membership = response.body();
+        if (membership == null) {
+            throw new ClientException("Failed to parse membership response");
+        }
+        return membership.getId();
+    }
+
+    public long addUserToProfile(String username, String profileName) throws IOException, ClientException {
+        bonitaCookieInterceptor.checkLogged();
+        Profile profile = getProfile(profileName);
+        User user = identityService.getUser(username);
+        return addUserToProfile(user.getId(), profile.getId());
     }
 }

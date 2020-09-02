@@ -8,19 +8,6 @@
  */
 package com.bonitasoft.deployer.client.internal.services;
 
-import static java.lang.String.format;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
 import com.bonitasoft.deployer.client.event.ImportNotifier;
 import com.bonitasoft.deployer.client.event.ImportWarningEvent;
 import com.bonitasoft.deployer.client.exception.ClientException;
@@ -40,6 +27,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.*;
+
+import static java.lang.String.format;
+
 public class ProcessService extends ClientService {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ProcessService.class.getName());
@@ -50,39 +44,46 @@ public class ProcessService extends ClientService {
     private final ImportNotifier importNotifier;
 
     public ProcessService(RestApiConverter restApiConverter, BonitaCookieInterceptor bonitaCookieInterceptor,
-            ProcessAPI processAPI, ImportNotifier importNotifier) {
+                          ProcessAPI processAPI, ImportNotifier importNotifier) {
         this.restApiConverter = restApiConverter;
         this.bonitaCookieInterceptor = bonitaCookieInterceptor;
         this.processAPI = processAPI;
         this.importNotifier = importNotifier;
     }
 
-    public void importProcess(File content, ProcessImportPolicy policy)
+    /**
+     * Upload and activate a process according the given policy
+     *
+     * @param content the process file to deploy
+     * @param policy  the deploy policy
+     * @return the deployed process id
+     * @throws IOException
+     * @throws ClientException
+     */
+    public long importProcess(File content, ProcessImportPolicy policy)
             throws IOException, ClientException {
         LOGGER.info("Deploying process '{}' using policy {} ...", content.getName(), policy.name());
         bonitaCookieInterceptor.checkLogged();
         BusinessArchive businessArchive = BusinessArchive.read(content);
         String processName = businessArchive.getName();
         String processVersion = businessArchive.getVersion();
-        Optional<Process> process = getProcess(processName, processVersion);
-        if (process.isPresent()) {
+        Optional<Process> maybeProcess = getProcess(processName, processVersion);
+        if (maybeProcess.isPresent()) {
+            Process process = maybeProcess.get();
             LOGGER.debug("Process '{}' in version '{}' already exists.", processName, processVersion);
-            if (policy.equals(ProcessImportPolicy.REPLACE_DUPLICATES)) {
-                //simulate a REPLACE_DUPLICATES policy here because it is not implemented in engine side
-                LOGGER.debug(
-                        "Process '{}' in version '{}' already exists. Policy REPLACE_DUPLICATES: deleting existing process...",
-                        processName, processVersion);
-                deleteExistingProcess(process.get());
-            } else if (policy.equals(ProcessImportPolicy.IGNORE_DUPLICATES)) {
-                String message = String.format("Process '%s' in version '%s' already exists. " +
-                        "Policy IGNORE_DUPLICATES: skip deployment of existing process.", processName,
-                        processVersion);
-                importNotifier.post(new ImportWarningEvent(message));
-                return;
-            } else {
-                throw new ClientException(format(
-                        "Process '%s' in version '%s' already exists. Policy FAIL_ON_DUPLICATES: deployment aborted.",
-                        processName, processVersion));
+            switch (policy) {
+                case REPLACE_DUPLICATES:
+                    //simulate a REPLACE_DUPLICATES policy here because it is not implemented in engine side
+                    LOGGER.debug("Process '{}' in version '{}' already exists. Policy REPLACE_DUPLICATES: deleting existing process...", processName, processVersion);
+                    deleteExistingProcess(process);
+                    break;
+                case IGNORE_DUPLICATES:
+                    String message = String.format("Process '%s' in version '%s' already exists. " +
+                            "Policy IGNORE_DUPLICATES: skip deployment of existing process.", processName, processVersion);
+                    importNotifier.post(new ImportWarningEvent(message));
+                    break;
+                default:
+                    throw new ClientException(format("Process '%s' in version '%s' already exists. Policy FAIL_ON_DUPLICATES: deployment aborted.", processName, processVersion));
             }
         }
 
@@ -101,7 +102,10 @@ public class ProcessService extends ClientService {
         LOGGER.info("Process deployed successfully.");
 
         final Process processDeployed = responseImport.body();
-        if (processDeployed.getConfigurationState() == Process.ConfigurationState.RESOLVED) {
+        if (processDeployed == null) {
+            throw new ClientException(format("Failed to parse import process response for process %s-%s", processName, processVersion));
+        }
+        if (Process.ConfigurationState.RESOLVED.equals(processDeployed.getConfigurationState())) {
             LOGGER.info("Process '{}' ({}) is resolved. Activating process...", processName, processVersion);
             long processId = processDeployed.getId();
             try {
@@ -126,9 +130,10 @@ public class ProcessService extends ClientService {
                         .forEach(LOGGER::warn);
             }
         } else {
-            LOGGER.info("Process '{}' ({}) is unresolved. It cannot be activated for now.", processName,
-                    processVersion);
+            LOGGER.info("Process '{}' ({}) is unresolved. It cannot be activated for now.", processName, processVersion);
         }
+
+        return processDeployed.getId();
     }
 
     private void deleteExistingProcess(Process process) throws IOException, UnauthorizedException {

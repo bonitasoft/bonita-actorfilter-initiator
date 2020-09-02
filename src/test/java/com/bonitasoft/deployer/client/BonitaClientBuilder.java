@@ -14,10 +14,10 @@ import com.bonitasoft.deployer.client.internal.BonitaCookieInterceptor;
 import com.bonitasoft.deployer.client.internal.api.*;
 import com.bonitasoft.deployer.client.internal.converters.RestApiConverter;
 import com.bonitasoft.deployer.client.internal.services.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import okhttp3.OkHttpClient;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
@@ -93,29 +93,17 @@ public class BonitaClientBuilder {
         importNotifier = ofNullable(importNotifier).orElseGet(LogOnlyImportNotifier::new);
 
         LoginService loginService = new LoginService(retrofit.create(LoginAPI.class), bonitaCookieInterceptor);
-        ApplicationService applicationService = new ApplicationService(bonitaCookieInterceptor,
-                retrofit.create(ApplicationAPI.class));
-        OrganizationService organizationService = new OrganizationService(bonitaCookieInterceptor,
-                retrofit.create(OrganizationAPI.class));
-        ProfileService profileService = new ProfileService(bonitaCookieInterceptor, retrofit.create(ProfileAPI.class),
-                importNotifier);
-        PageService pageService = new PageService(restApiConverter, bonitaCookieInterceptor,
-                retrofit.create(PageAPI.class));
-        ProcessService processService = new ProcessService(restApiConverter, bonitaCookieInterceptor,
-                retrofit.create(ProcessAPI.class), importNotifier);
-        SystemService systemService = new SystemService(restApiConverter, bonitaCookieInterceptor,
-                retrofit.create(SystemAPI.class));
-        BdmAccessControlService bdmAccessControlService = new BdmAccessControlService(bonitaCookieInterceptor,
-                systemService,
-                retrofit.create(BdmAccessControlAPI.class), importNotifier);
-        BdmService bdmService = new BdmService(bonitaCookieInterceptor, systemService, bdmAccessControlService,
-                retrofit.create(BdmAPI.class), restApiConverter);
-        IdentityService identityService = new IdentityService(bonitaCookieInterceptor,
-                retrofit.create(IdentityAPI.class));
-        UserTaskService userTaskService = new UserTaskService(retrofit.create(UserTaskAPI.class), restApiConverter,
-                bonitaCookieInterceptor);
-        ConfigurationService configurationService = new ConfigurationService(bonitaCookieInterceptor, systemService,
-                retrofit.create(ConfigurationAPI.class), importNotifier);
+        ApplicationService applicationService = new ApplicationService(bonitaCookieInterceptor, retrofit.create(ApplicationAPI.class));
+        OrganizationService organizationService = new OrganizationService(bonitaCookieInterceptor, retrofit.create(OrganizationAPI.class));
+        IdentityService identityService = new IdentityService(bonitaCookieInterceptor, retrofit.create(IdentityAPI.class));
+        ProfileService profileService = new ProfileService(bonitaCookieInterceptor, retrofit.create(ProfileAPI.class), identityService, importNotifier);
+        PageService pageService = new PageService(restApiConverter, bonitaCookieInterceptor, retrofit.create(PageAPI.class));
+        ProcessService processService = new ProcessService(restApiConverter, bonitaCookieInterceptor, retrofit.create(ProcessAPI.class), importNotifier);
+        SystemService systemService = new SystemService(restApiConverter, bonitaCookieInterceptor, retrofit.create(SystemAPI.class));
+        BdmAccessControlService bdmAccessControlService = new BdmAccessControlService(bonitaCookieInterceptor, systemService, retrofit.create(BdmAccessControlAPI.class), importNotifier);
+        BdmService bdmService = new BdmService(bonitaCookieInterceptor, systemService, bdmAccessControlService, retrofit.create(BdmAPI.class), restApiConverter);
+        UserTaskService userTaskService = new UserTaskService(retrofit.create(UserTaskAPI.class), restApiConverter, bonitaCookieInterceptor);
+        ConfigurationService configurationService = new ConfigurationService(bonitaCookieInterceptor, systemService, retrofit.create(ConfigurationAPI.class), importNotifier);
 
         BonitaClient bonitaClient = new BonitaClient(loginService,
                 applicationService,

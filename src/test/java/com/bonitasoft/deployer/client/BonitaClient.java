@@ -8,41 +8,14 @@
  */
 package com.bonitasoft.deployer.client;
 
-import static java.lang.String.format;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import com.bonitasoft.deployer.client.exception.BdmAccessControlException;
 import com.bonitasoft.deployer.client.exception.ClientException;
 import com.bonitasoft.deployer.client.exception.NotFoundException;
 import com.bonitasoft.deployer.client.exception.UnauthorizedException;
-import com.bonitasoft.deployer.client.internal.api.CreateUser;
-import com.bonitasoft.deployer.client.internal.services.ApplicationService;
-import com.bonitasoft.deployer.client.internal.services.BdmAccessControlService;
-import com.bonitasoft.deployer.client.internal.services.BdmService;
-import com.bonitasoft.deployer.client.internal.services.ConfigurationService;
-import com.bonitasoft.deployer.client.internal.services.IdentityService;
-import com.bonitasoft.deployer.client.internal.services.LoginService;
-import com.bonitasoft.deployer.client.internal.services.OrganizationService;
-import com.bonitasoft.deployer.client.internal.services.PageService;
-import com.bonitasoft.deployer.client.internal.services.ProcessService;
-import com.bonitasoft.deployer.client.internal.services.ProfileService;
-import com.bonitasoft.deployer.client.internal.services.SystemService;
-import com.bonitasoft.deployer.client.internal.services.UserTaskService;
-import com.bonitasoft.deployer.client.model.Application;
-import com.bonitasoft.deployer.client.model.License;
-import com.bonitasoft.deployer.client.model.Page;
+import com.bonitasoft.deployer.client.internal.services.*;
+import com.bonitasoft.deployer.client.internal.services.model.CreateUser;
 import com.bonitasoft.deployer.client.model.Process;
-import com.bonitasoft.deployer.client.model.ProcessParameter;
-import com.bonitasoft.deployer.client.model.Profile;
-import com.bonitasoft.deployer.client.model.TenantResourceStatus;
-import com.bonitasoft.deployer.client.model.User;
-import com.bonitasoft.deployer.client.model.UserTask;
+import com.bonitasoft.deployer.client.model.*;
 import com.bonitasoft.deployer.client.policies.ApplicationImportPolicy;
 import com.bonitasoft.deployer.client.policies.OrganizationImportPolicy;
 import com.bonitasoft.deployer.client.policies.ProcessImportPolicy;
@@ -51,6 +24,15 @@ import com.github.zafarkhaja.semver.Version;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static java.lang.String.format;
 
 /**
  * Entry point to interact with the REST API of bonita. <br>
@@ -79,10 +61,10 @@ public class BonitaClient {
     private String url;
 
     BonitaClient(LoginService loginService, ApplicationService applicationService,
-            OrganizationService organizationService, PageService pageService, ProfileService profileService,
-            ProcessService processService, BdmService bdmService, SystemService systemService,
-            BdmAccessControlService bdmAccessControlService, IdentityService identityService,
-            UserTaskService userTaskService, ConfigurationService configurationService) {
+                 OrganizationService organizationService, PageService pageService, ProfileService profileService,
+                 ProcessService processService, BdmService bdmService, SystemService systemService,
+                 BdmAccessControlService bdmAccessControlService, IdentityService identityService,
+                 UserTaskService userTaskService, ConfigurationService configurationService) {
         this.loginService = loginService;
         this.applicationService = applicationService;
         this.organizationService = organizationService;
@@ -150,6 +132,14 @@ public class BonitaClient {
         return profileService.searchProfiles(page, count);
     }
 
+    public long addUserToProfile(long userId, long profileId) throws IOException, ClientException {
+        return profileService.addUserToProfile(userId, profileId);
+    }
+
+    public long addUserToProfile(String username, String profileName) throws IOException, ClientException {
+        return profileService.addUserToProfile(username, profileName);
+    }
+
     // =================================================================================================================
     // IDENTITY / ORGANIZATION
     // =================================================================================================================
@@ -191,8 +181,8 @@ public class BonitaClient {
     // PROCESS
     // =================================================================================================================
 
-    public void importProcess(File file, ProcessImportPolicy policy) throws IOException, ClientException {
-        processService.importProcess(file, policy);
+    public long importProcess(File file, ProcessImportPolicy policy) throws IOException, ClientException {
+        return processService.importProcess(file, policy);
     }
 
     public List<Process> searchProcesses(int page, int count) throws IOException {

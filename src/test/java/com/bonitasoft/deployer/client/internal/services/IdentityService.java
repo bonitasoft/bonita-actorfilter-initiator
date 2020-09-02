@@ -10,7 +10,7 @@ package com.bonitasoft.deployer.client.internal.services;
 
 import com.bonitasoft.deployer.client.exception.UnauthorizedException;
 import com.bonitasoft.deployer.client.internal.BonitaCookieInterceptor;
-import com.bonitasoft.deployer.client.internal.api.CreateUser;
+import com.bonitasoft.deployer.client.internal.services.model.CreateUser;
 import com.bonitasoft.deployer.client.internal.api.IdentityAPI;
 import com.bonitasoft.deployer.client.model.User;
 import org.slf4j.Logger;
