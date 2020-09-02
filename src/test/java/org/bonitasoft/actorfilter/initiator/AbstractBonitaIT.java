@@ -87,7 +87,7 @@ public abstract class AbstractBonitaIT {
             String artifactId = config.getProperty("projectArtifactId");
             String artifactVersion = config.getProperty("projectVersion");
 
-            bonitaVersion = config.getProperty("bonitaVersion");
+            bonitaVersion = System.getProperty("bonitaVersion", config.getProperty("bonitaVersion"));
             definitionId = config.getProperty("definitionId");
             definitionVersion = config.getProperty("definitionVersion");
             implementationId = config.getProperty("implementationId");

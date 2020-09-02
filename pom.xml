@@ -34,6 +34,7 @@
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <skipUTs>false</skipUTs>
 
         <!-- Actor filter -->
         <definition-id>${project.artifactId}</definition-id>
@@ -241,6 +242,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
                     <configuration>
+                        <skip>${skipUTs}</skip>
                         <enableAssertions>true</enableAssertions>
                         <forkCount>1</forkCount>
                         <reuseForks>true</reuseForks>
