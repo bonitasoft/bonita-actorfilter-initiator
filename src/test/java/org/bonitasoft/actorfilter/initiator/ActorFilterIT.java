@@ -17,6 +17,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.bonitasoft.actorfilter.initiator.ProcessInitiatorUserFilter.AUTO_ASSIGN;
 
 @Slf4j
 @Testcontainers
@@ -51,11 +52,11 @@ class ActorFilterIT extends AbstractBonitaIT {
 
         final String deliveryActor = "Delivery men";
 
-        final ProcessDefinitionBuilder processBuilder = new ProcessDefinitionBuilder().createNewInstance("ProcessWithActorFilter", definitionVersion);
+        final ProcessDefinitionBuilder processBuilder = new ProcessDefinitionBuilder().createNewInstance("ProcessWithActorFilter", "1.0.0");
         processBuilder.addActor(deliveryActor).addDescription("Delivery all day and night long").setActorInitiator(deliveryActor);
         processBuilder.addUserTask("step1", deliveryActor)
-                .addUserFilter("initiator", implementationId, implementationVersion)
-                .addInput("autoAssign", new ExpressionBuilder().createConstantBooleanExpression(true));
+                .addUserFilter("initiator", definitionId, definitionVersion)
+                .addInput(AUTO_ASSIGN, new ExpressionBuilder().createConstantBooleanExpression(true));
         barBuilder.setProcessDefinition(processBuilder.done());
 
         ActorMapping actorMapping = new ActorMapping();
@@ -74,17 +75,24 @@ class ActorFilterIT extends AbstractBonitaIT {
     }
 
     @Test
-    void testProcessInitiatorUserFilterTest() throws Exception {
+    void task_should_be_assigned_to_process_initiator() throws Exception {
+
+        // Given
         loginAs("matti", "bpm");
+
+        // When
         long processInstanceId = bonitaClient.startProcess(processId);
         logout();
 
+        // Then
         loginAs("install", "install");
         List<UserTask> userTasks = bonitaClient.searchUserTask(processInstanceId);
-        userTasks.forEach(System.out::println);
-//        waitForUserTask(processInstance, "step1");
-//        checkAssignations();
-        System.out.println("Pouet");
+        assertThat(userTasks).isNotEmpty();
+
+        UserTask nextTask = userTasks.get(0);
+        assertThat(nextTask.getAssignedId()).isGreaterThan(0);
+        assertThat(nextTask.getAssignedId()).isEqualTo(matti.getId());
+
         logout();
     }
 

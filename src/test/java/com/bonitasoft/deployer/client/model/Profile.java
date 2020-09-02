@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import lombok.Getter;
 
 /**
  * @author Laurent Leseigneur
@@ -25,7 +26,6 @@ public class Profile {
     private long id;
     private String name;
     private String description;
-
     @JsonProperty("is_default")
     private boolean isDefault;
 
@@ -60,4 +60,26 @@ public class Profile {
     public void setDefault(boolean aDefault) {
         isDefault = aDefault;
     }
+
+    /**
+     * Profiles available as default in Bonita
+     */
+    public enum Profiles {
+        /**
+         * Default 'User' profile name
+         */
+        USER("User"),
+        /**
+         * Default 'Administrator' profile name
+         */
+        ADMINISTRATOR("Administrator");
+
+        @Getter
+        private String value;
+
+        private Profiles(String value) {
+            this.value = value;
+        }
+    }
+
 }

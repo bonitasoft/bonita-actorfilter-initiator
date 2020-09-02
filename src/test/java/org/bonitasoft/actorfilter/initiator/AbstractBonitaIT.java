@@ -25,6 +25,8 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Properties;
 
+import static com.bonitasoft.deployer.client.model.Profile.Profiles;
+
 @Slf4j
 public abstract class AbstractBonitaIT {
 
@@ -33,9 +35,7 @@ public abstract class AbstractBonitaIT {
     protected GenericContainer<?> bonitaContainer;
     protected String bonitaVersion;
 
-    protected String artifactVersion;
-    protected String artifactName;
-
+    protected String definitionId;
     protected String definitionVersion;
     protected String implementationId;
     protected String implementationVersion;
@@ -77,24 +77,28 @@ public abstract class AbstractBonitaIT {
         bonitaPort = bonitaContainer.getFirstMappedPort();
     }
 
-    private void loadConfiguration() {
+    private void loadConfiguration() throws IOException {
 
         Properties config = new Properties();
-        String configPath = "test.properties";
+        String configPath = "bonita.properties";
         try (InputStream configStream = getClass().getClassLoader().getResourceAsStream(configPath)) {
             config.load(configStream);
+
+            String artifactId = config.getProperty("projectArtifactId");
+            String artifactVersion = config.getProperty("projectVersion");
+
+            bonitaVersion = config.getProperty("bonitaVersion");
+            definitionId = config.getProperty("definitionId");
+            definitionVersion = config.getProperty("definitionVersion");
+            implementationId = config.getProperty("implementationId");
+            implementationVersion = config.getProperty("implementationVersion");
+
+            workDir = new File("target/bonita-it-tmp");
+            zipFile = new File("target/" + artifactId + "-" + artifactVersion + ".zip");
         } catch (IOException e) {
             System.err.println("Unable to load test configuration file : " + configPath);
+            throw e;
         }
-        artifactName = config.getProperty("projectArtifactId");
-        artifactVersion = config.getProperty("projectVersion");
-        bonitaVersion = config.getProperty("bonitaVersion");
-        definitionVersion = config.getProperty("definitionVersion");
-        implementationVersion = config.getProperty("implVersion");
-        implementationId = config.getProperty("implId");
-
-        workDir = new File("target/" + artifactName + "-tmp");
-        zipFile = new File("target/" + artifactName + "-" + artifactVersion + ".zip");
     }
 
     protected BusinessArchiveBuilder newBarBuilder() throws Exception {
@@ -108,9 +112,10 @@ public abstract class AbstractBonitaIT {
         }
 
         // bar builder - impl
-        File implFile = new File(workDir, artifactName + ".impl");
+        String implementationFileName = definitionId + ".impl";
+        File implFile = new File(workDir, implementationFileName);
         try (final InputStream impl = new FileInputStream(implFile)) {
-            barBuilder.addUserFilters(new BarResource(implementationId + "-" + implementationVersion + ".impl", IOUtils.toByteArray(impl)));
+            barBuilder.addUserFilters(new BarResource(implementationFileName, IOUtils.toByteArray(impl)));
         } catch (IOException e) {
             throw new RuntimeException("Failed to read impl file: " + implFile.getName(), e);
         }
@@ -137,7 +142,7 @@ public abstract class AbstractBonitaIT {
      */
     protected long deployBar(BusinessArchive businessArchive) throws Exception {
         File barFile = new File(workDir, "process.bar");
-        if(barFile.exists()){
+        if (barFile.exists()) {
             barFile.delete();
         }
         BusinessArchiveFactory.writeBusinessArchiveToFile(businessArchive, barFile);
@@ -146,13 +151,13 @@ public abstract class AbstractBonitaIT {
 
     protected User addUser(String username) throws IOException, ClientException {
         User user = bonitaClient.createUser(new CreateUser().setUserName(username).setFirstName(username).setPassword("bpm"));
-        bonitaClient.addUserToProfile(user.getUserName(), "User");
+        bonitaClient.addUserToProfile(user.getUserName(), Profiles.USER.getValue());
         return user;
     }
 
     protected User addAdministrator(String username) throws IOException, ClientException {
         User user = bonitaClient.createUser(new CreateUser().setUserName(username).setFirstName(username).setPassword("bpm"));
-        bonitaClient.addUserToProfile(user.getUserName(), "Administrator");
+        bonitaClient.addUserToProfile(user.getUserName(), Profiles.ADMINISTRATOR.getValue());
         return user;
     }
 
