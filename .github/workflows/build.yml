@@ -44,7 +44,7 @@ jobs:
     strategy:
       matrix:
         bonita_version: [7.11.1, 7.10, 7.9]
-    needs: build
+    needs: build-unit-tests
     steps:
       # restore source to use same version between jobs
       - uses: actions/download-artifact@master
