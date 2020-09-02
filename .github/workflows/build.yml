@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        bonita_version: ['latest', '7.10', '7.9']
+        bonita_version: ['latest', '7.10']
     needs: build-unit-tests
     steps:
       # restore source to use same version between jobs
