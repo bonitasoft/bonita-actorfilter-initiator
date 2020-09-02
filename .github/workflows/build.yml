@@ -67,7 +67,7 @@ jobs:
 
       # Run tests
       - name: Run integration tests
-        run: ./mvnw -B verify -DskipUTs -DbonitaVersion=${{ matrix.bonita_version }}
+        run: ls -la && chmod u+x ./mvnw && ./mvnw -B verify -DskipUTs -DbonitaVersion=${{ matrix.bonita_version }}
 
   package:
     runs-on: ubuntu-latest
