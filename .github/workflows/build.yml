@@ -67,7 +67,7 @@ jobs:
 
       # Run tests
       - name: Run integration tests
-        run: ls -la && chmod u+x ./mvnw && ./mvnw -B verify -DskipUTs -DbonitaVersion=${{ matrix.bonita_version }}
+        run: chmod u+x ./mvnw && ./mvnw -B verify -DskipUTs -DbonitaVersion=${{ matrix.bonita_version }}
 
   package:
     runs-on: ubuntu-latest
@@ -94,7 +94,7 @@ jobs:
 
       # Build package and set as staging artifact
       - name: Build package
-        run: ./mvnw -B clean package -DskipTests
+        run: chmod u+x ./mvnw && ./mvnw -B clean package -DskipTests
       - run: mkdir staging && cp target/*.zip staging
       - name: Upload artifact
         uses: actions/upload-artifact@v2

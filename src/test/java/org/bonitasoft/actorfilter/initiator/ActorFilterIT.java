@@ -96,10 +96,4 @@ class ActorFilterIT extends AbstractBonitaIT {
         logout();
     }
 
-    @Test
-    void bonita_should_be_running() {
-        assertThat(bonitaContainer.isRunning()).isTrue();
-        assertThat(bonitaHost).isNotBlank();
-        assertThat(bonitaPort).isNotZero();
-    }
 }
