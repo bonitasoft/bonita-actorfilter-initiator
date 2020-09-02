@@ -90,7 +90,7 @@ class ActorFilterIT extends AbstractBonitaIT {
         assertThat(userTasks).isNotEmpty();
 
         UserTask nextTask = userTasks.get(0);
-        assertThat(nextTask.getAssignedId()).isGreaterThan(0);
+        assertThat(nextTask.getAssignedId()).isPositive();
         assertThat(nextTask.getAssignedId()).isEqualTo(matti.getId());
 
         logout();
