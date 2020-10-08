@@ -10,7 +10,9 @@ Filter users of an actor based on the process initiator
 
 __Clone__ or __fork__ this repository, then at the root of the project run:
 
-`./mvnw`
+`./mvnw package`
+
+You will then get a `bonita-actorfilter-user-manager-<VERSION>.zip` file in the target/ folder.
 
 ## Release
 
