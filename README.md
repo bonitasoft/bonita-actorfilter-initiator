@@ -12,7 +12,7 @@ __Clone__ or __fork__ this repository, then at the root of the project run:
 
 `./mvnw package`
 
-You will then get a `bonita-actorfilter-user-manager-<VERSION>.zip` file in the target/ folder.
+You will then get a `bonita-actorfilter-initiator-<VERSION>.zip` file in the target/ folder.
 
 ## Release
 
